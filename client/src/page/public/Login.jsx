@@ -32,10 +32,9 @@ const Login = () => {
   const onSignup = async (data) => {
     try {
       const response = await callApi('POST', '/auth/register', data);
-      
+
       if (response.success) {
         alert('Registration successful! Please login.');
-        localStorage.setItem('access_token', response.data.token);
         resetSignup();
         setIsActive(false);
       }
@@ -47,13 +46,12 @@ const Login = () => {
   const onLogin = async (data) => {
     try {
       const response = await callApi('POST', '/auth/login', data);
-      
+
       if (response.success) {
-        localStorage.setItem('access_token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data));
-        alert('Login successful!');
+        localStorage.setItem('access_token', response.access_token);
+        localStorage.setItem('user', JSON.stringify(response.user));
         resetLogin();
-        navigate('/product');  // ✅ FIXED: /dashboard → /product
+        navigate('/dashboard');
       }
     } catch (err) {
       alert(err.message || 'Login failed!');
@@ -68,7 +66,7 @@ const Login = () => {
           <form onSubmit={handleSubmitSignup(onSignup)}>
             <h1>Create Account</h1>
             <span>Use your email for registration</span>
-            
+
             <input
               type="text"
               placeholder="Enter your full name"

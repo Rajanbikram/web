@@ -23,3 +23,6 @@ export const connection = async () => {
     console.error("❌ Unable to connect to the database:", error);
   }
 };
+
+
+export default sequelize;

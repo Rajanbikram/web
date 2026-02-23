@@ -1,27 +1,32 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { connection } from './database/db.js';
 
 // Load environment variables FIRST
 dotenv.config();
 
-// ✅ Import User model BEFORE database connection
-import { User } from './Model/usermodel.js';
+// Import models and associations BEFORE routes
+import './Model/User/index.js';
+
+// Import database connection
+import { connection } from './database/db.js';
 
 // Routes
-import userRoute from "./Routes/userRoute.js";
-import productRoute from "./Routes/productroute.js";
-import authRoute from "./Routes/authRoute.js";
+import authRoutes from './Routes/authRoute.js';
+import userRoutes from './Routes/User/userRoutes.js';
+import skillRoutes from './Routes/User/skillRoutes.js';
+import skillRequestRoutes from './Routes/User/skillRequestRoutes.js';
+import messageRoutes from './Routes/User/messageRoutes.js';
+import reviewRoutes from './Routes/User/reviewRoutes.js';
 
 const app = express();
 
-// ✅ FIXED CORS Configuration
+// CORS Configuration
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:5174'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 app.use(express.json());
@@ -31,18 +36,21 @@ connection();
 
 // Test route
 app.get('/', (req, res) => {
-  res.send('RentEasy Nepal API is running...');
+  res.send('SkillSwap API is running...');
 });
 
 // API Routes
-app.use('/api/users', userRoute);
-app.use('/api/products', productRoute);
-app.use('/api/auth', authRoute);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/skills', skillRoutes);
+app.use('/api/requests', skillRequestRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: "Something went wrong!" });
+  res.status(500).json({ message: 'Something went wrong!' });
 });
 
 // PORT
