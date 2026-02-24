@@ -7,6 +7,9 @@ dotenv.config();
 
 // Import models and associations BEFORE routes
 import './Model/User/index.js';
+import './Model/Admin/UserModel.js';
+import './Model/Admin/SkillModel.js';
+import './Model/Admin/ReportModel.js';
 
 // Import database connection
 import { connection } from './database/db.js';
@@ -18,6 +21,7 @@ import skillRoutes from './Routes/User/skillRoutes.js';
 import skillRequestRoutes from './Routes/User/skillRequestRoutes.js';
 import messageRoutes from './Routes/User/messageRoutes.js';
 import reviewRoutes from './Routes/User/reviewRoutes.js';
+import adminRoutes from './Routes/Admin/adminRoutes.js';
 
 const app = express();
 
@@ -46,6 +50,7 @@ app.use('/api/skills', skillRoutes);
 app.use('/api/requests', skillRequestRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

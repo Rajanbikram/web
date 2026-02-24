@@ -8,34 +8,35 @@ export const User = sequelize.define(
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
-      primaryKey: true
+      primaryKey: true,
     },
     name: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
     },
     email: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
-      validate: {
-        isEmail: true
-      }
+      validate: { isEmail: true },
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+    },
+    role: {
+      type: DataTypes.ENUM('user', 'admin'),
+      allowNull: false,
+      defaultValue: 'user',
     },
     phone: {
       type: DataTypes.STRING,
-      allowNull: true,  // ✅ Optional - can be null
-     
+      allowNull: true,
     },
     address: {
       type: DataTypes.STRING,
-      allowNull: true,  // ✅ Optional - can be null
-     
-    }
+      allowNull: true,
+    },
   },
   {
     tableName: "users",
@@ -49,15 +50,15 @@ export const User = sequelize.define(
         }
       },
       beforeUpdate: async (user) => {
-        if (user.changed('password')) {
+        if (user.changed("password")) {
           const salt = await bcrypt.genSalt(10);
           user.password = await bcrypt.hash(user.password, salt);
         }
-      }
-    }
+      },
+    },
   }
 );
 
-User.prototype.comparePassword = async function(candidatePassword) {
+User.prototype.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };

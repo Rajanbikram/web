@@ -1,8 +1,13 @@
 import { CURRENT_USER } from '../constants/user';
 
 function TopNav() {
-  const initials = `${CURRENT_USER.firstName[0]}${CURRENT_USER.lastName[0]}`;
-  const fullName = `${CURRENT_USER.firstName} ${CURRENT_USER.lastName}`;
+  const initials = CURRENT_USER
+    ? `${CURRENT_USER.firstName?.[0] ?? '?'}${CURRENT_USER.lastName?.[0] ?? '?'}`
+    : '??';
+
+  const fullName = CURRENT_USER
+    ? `${CURRENT_USER.firstName} ${CURRENT_USER.lastName}`
+    : 'Guest';
 
   return (
     <header className="top-nav">
