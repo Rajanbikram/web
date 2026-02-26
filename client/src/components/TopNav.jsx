@@ -1,13 +1,33 @@
-import { CURRENT_USER } from '../constants/user';
+import { useNavigate } from 'react-router-dom';
 
 function TopNav() {
-  const initials = CURRENT_USER
-    ? `${CURRENT_USER.firstName?.[0] ?? '?'}${CURRENT_USER.lastName?.[0] ?? '?'}`
+  // Read fresh from localStorage every render
+  const getUser = () => {
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const user = getUser();
+
+  const initials = user
+    ? `${user.firstName?.[0] ?? '?'}${user.lastName?.[0] ?? '?'}`
     : '??';
 
-  const fullName = CURRENT_USER
-    ? `${CURRENT_USER.firstName} ${CURRENT_USER.lastName}`
+  const fullName = user
+    ? `${user.firstName} ${user.lastName}`
     : 'Guest';
+
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
   return (
     <header className="top-nav">
@@ -28,14 +48,14 @@ function TopNav() {
           <span className="badge"></span>
         </button>
 
-        <button className="icon-btn">
+        <button className="icon-btn" onClick={() => navigate('/messages')}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
           <span className="badge-count">3</span>
         </button>
 
-        <button className="profile-btn">
+        <button className="profile-btn" onClick={handleLogout} title="Click to logout">
           <div className="avatar">{initials}</div>
           <span className="profile-name">{fullName}</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

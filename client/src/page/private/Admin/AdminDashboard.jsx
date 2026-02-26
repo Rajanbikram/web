@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import API from '../../../utils/api'; // ✅ FIXED: token interceptor wala
 import '../../../css/admin.css';
 
 import AdminSidebar from './AdminSidebar';
@@ -10,8 +10,6 @@ import AdminReportsTable from './AdminReportsTable';
 import AdminActivityReport from './AdminActivityReport';
 import AdminConfirmModal from './AdminConfirmModal';
 import AdminToast from './AdminToast';
-
-const API = 'http://localhost:5000/api/admin';
 
 const AdminDashboard = () => {
   const [activePage, setActivePage] = useState('dashboard');
@@ -31,10 +29,10 @@ const AdminDashboard = () => {
   const fetchAll = useCallback(async () => {
     try {
       const [statsRes, usersRes, skillsRes, reportsRes] = await Promise.all([
-        axios.get(`${API}/stats`),
-        axios.get(`${API}/users`),
-        axios.get(`${API}/skills`),
-        axios.get(`${API}/reports`),
+        API.get('/admin/stats'),       // ✅ FIXED
+        API.get('/admin/users'),       // ✅ FIXED
+        API.get('/admin/skills'),      // ✅ FIXED
+        API.get('/admin/reports'),     // ✅ FIXED
       ]);
       setStats(statsRes.data);
       setUsers(usersRes.data);
@@ -65,7 +63,7 @@ const AdminDashboard = () => {
       variant: action === 'block' ? 'danger' : 'confirm',
       onConfirm: async () => {
         try {
-          const res = await axios.patch(`${API}/users/${userId}/block`);
+          const res = await API.patch(`/admin/users/${userId}/block`); // ✅ FIXED
           setUsers(prev => prev.map(u => u.id === userId ? res.data.user : u));
           showToast(`${user.name} has been ${res.data.user.status}`);
           fetchAll();
@@ -86,7 +84,7 @@ const AdminDashboard = () => {
       variant: 'danger',
       onConfirm: async () => {
         try {
-          await axios.delete(`${API}/skills/${skillId}`);
+          await API.delete(`/admin/skills/${skillId}`); // ✅ FIXED
           setSkills(prev => prev.filter(s => s.id !== skillId));
           showToast(`"${skill.title}" has been removed`);
           fetchAll();
@@ -99,7 +97,7 @@ const AdminDashboard = () => {
 
   const handleResolveReport = async (reportId, status) => {
     try {
-      const res = await axios.patch(`${API}/reports/${reportId}`, { status });
+      const res = await API.patch(`/admin/reports/${reportId}`, { status }); // ✅ FIXED
       setReports(prev => prev.map(r => r.id === reportId ? res.data.report : r));
       showToast(`Report ${status === 'resolved' ? 'approved' : 'dismissed'}`);
       fetchAll();
@@ -222,27 +220,17 @@ const AdminDashboard = () => {
 
         {/* MANAGE USERS PAGE */}
         <div className={`page ${activePage === 'users' ? 'active' : ''}`}>
-          <AdminUsersTable
-            users={users}
-            onToggleBlock={handleToggleBlock}
-            onToast={showToast}
-          />
+          <AdminUsersTable users={users} onToggleBlock={handleToggleBlock} onToast={showToast} />
         </div>
 
         {/* MANAGE SKILLS PAGE */}
         <div className={`page ${activePage === 'skills' ? 'active' : ''}`}>
-          <AdminSkillsTable
-            skills={skills}
-            onRemove={handleRemoveSkill}
-          />
+          <AdminSkillsTable skills={skills} onRemove={handleRemoveSkill} />
         </div>
 
         {/* REPORTED SKILLS PAGE */}
         <div className={`page ${activePage === 'reports' ? 'active' : ''}`}>
-          <AdminReportsTable
-            reports={reports}
-            onResolve={handleResolveReport}
-          />
+          <AdminReportsTable reports={reports} onResolve={handleResolveReport} />
         </div>
 
         {/* CONTENT MODERATION PAGE */}
@@ -292,11 +280,7 @@ const AdminDashboard = () => {
         onCancel={closeModal}
       />
 
-      <AdminToast
-        show={toast.show}
-        message={toast.message}
-        onHide={hideToast}
-      />
+      <AdminToast show={toast.show} message={toast.message} onHide={hideToast} />
     </>
   );
 };

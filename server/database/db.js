@@ -7,7 +7,7 @@ export const sequelize = new Sequelize(
   {
     host: "localhost",
     dialect: "postgres",
-    logging: true
+    logging: false
   }
 );
 
@@ -16,13 +16,12 @@ export const connection = async () => {
     await sequelize.authenticate();
     console.log("✅ Connection has been established successfully.");
 
-    // ✅ Use alter: true to update existing tables
     await sequelize.sync({ alter: true });
+
     console.log("✅ All tables synced successfully.");
   } catch (error) {
     console.error("❌ Unable to connect to the database:", error);
   }
 };
-
 
 export default sequelize;

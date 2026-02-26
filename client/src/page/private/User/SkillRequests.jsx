@@ -1,23 +1,17 @@
 import { useState, useEffect } from 'react';
 import API from '../../../utils/axios';
-import { CURRENT_USER } from '../../../constants/user';
 
 function SkillRequests() {
+  const CURRENT_USER = JSON.parse(localStorage.getItem('user')) || {};
   const [requests, setRequests] = useState([]);
   const [typeFilter, setTypeFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
 
   const fetchRequests = () => {
+    if (!CURRENT_USER?.id) return;
     API.get(`/requests/user/${CURRENT_USER.id}`)
       .then((res) => setRequests(res.data))
-      .catch(() => {
-        setRequests([
-          { id: 1, Skill: { name: 'JavaScript Fundamentals' }, FromUser: { id: 2, firstName: 'Alex', lastName: 'Johnson' }, ToUser: { id: 1 }, fromUserId: 2, toUserId: 1, status: 'pending', createdAt: '2024-01-25' },
-          { id: 2, Skill: { name: 'Piano Lessons' }, FromUser: { id: 3, firstName: 'Emma', lastName: 'Davis' }, ToUser: { id: 1 }, fromUserId: 3, toUserId: 1, status: 'pending', createdAt: '2024-01-24' },
-          { id: 3, Skill: { name: 'Spanish Language' }, FromUser: { id: 1 }, ToUser: { id: 4, firstName: 'Maria', lastName: 'Garcia' }, fromUserId: 1, toUserId: 4, status: 'accepted', createdAt: '2024-01-23' },
-          { id: 4, Skill: { name: 'Photography Basics' }, FromUser: { id: 5, firstName: 'Tom', lastName: 'Wilson' }, ToUser: { id: 1 }, fromUserId: 5, toUserId: 1, status: 'rejected', createdAt: '2024-01-22' },
-        ]);
-      });
+      .catch(() => setRequests([]));
   };
 
   useEffect(() => { fetchRequests(); }, []);
@@ -80,37 +74,41 @@ function SkillRequests() {
       <p className="text-sm text-muted mt-4">Showing {filtered.length} requests</p>
 
       <div className="grid-3 mt-4">
-        {filtered.map((req) => {
-          const isIncoming = req.toUserId === CURRENT_USER.id;
-          const otherUser = isIncoming ? req.FromUser : req.ToUser;
-          const otherName = otherUser ? `${otherUser.firstName} ${otherUser.lastName}` : 'User';
-          return (
-            <div className="request-card" key={req.id}>
-              <div className="request-header">
-                <div>
-                  <div className="request-skill">{req.Skill?.name}</div>
-                  <div className="request-from">{isIncoming ? 'From' : 'To'}: {otherName} • {formatDate(req.createdAt)}</div>
+        {filtered.length === 0 ? (
+          <p className="text-muted">No requests found.</p>
+        ) : (
+          filtered.map((req) => {
+            const isIncoming = req.toUserId === CURRENT_USER.id;
+            const otherUser = isIncoming ? req.FromUser : req.ToUser;
+            const otherName = otherUser ? `${otherUser.firstName} ${otherUser.lastName}` : 'User';
+            return (
+              <div className="request-card" key={req.id}>
+                <div className="request-header">
+                  <div>
+                    <div className="request-skill">{req.Skill?.name}</div>
+                    <div className="request-from">{isIncoming ? 'From' : 'To'}: {otherName} • {formatDate(req.createdAt)}</div>
+                  </div>
+                  <span className={`request-status ${req.status}`}>
+                    {getStatusIcon(req.status)}
+                    {req.status ? req.status.charAt(0).toUpperCase() + req.status.slice(1) : 'Unknown'}
+                  </span>
                 </div>
-                <span className={`request-status ${req.status}`}>
-                  {getStatusIcon(req.status)}
-                  {req.status.charAt(0).toUpperCase() + req.status.slice(1)}
-                </span>
+                {isIncoming && req.status === 'pending' && (
+                  <div className="request-actions">
+                    <button className="btn btn-success" onClick={() => updateStatus(req.id, 'accepted')}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                      Accept
+                    </button>
+                    <button className="btn btn-secondary" onClick={() => updateStatus(req.id, 'rejected')}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      Decline
+                    </button>
+                  </div>
+                )}
               </div>
-              {isIncoming && req.status === 'pending' && (
-                <div className="request-actions">
-                  <button className="btn btn-success" onClick={() => updateStatus(req.id, 'accepted')}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                    Accept
-                  </button>
-                  <button className="btn btn-secondary" onClick={() => updateStatus(req.id, 'rejected')}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    Decline
-                  </button>
-                </div>
-              )}
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </>
   );

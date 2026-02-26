@@ -1,24 +1,21 @@
 import { useState, useEffect } from 'react';
-import API from '../../../utils/axios';
+import API from '../../../utils/api'; // ✅ FIXED: api.js (token interceptor wala)
 
-const ALL_SKILLS = [
-  { id: 1, name: 'Python Programming', category: 'Technology', instructor: 'Sarah Wilson', initials: 'SW', location: 'New York, NY', rating: 4.9, reviews: 24 },
-  { id: 2, name: 'Guitar Basics', category: 'Music', instructor: 'Mike Chen', initials: 'MC', location: 'Los Angeles, CA', rating: 4.7, reviews: 18 },
-  { id: 3, name: 'Spanish Language', category: 'Languages', instructor: 'Maria Garcia', initials: 'MG', location: 'Miami, FL', rating: 4.8, reviews: 32 },
-  { id: 4, name: 'Web Development', category: 'Technology', instructor: 'James Brown', initials: 'JB', location: 'Seattle, WA', rating: 4.6, reviews: 15 },
-  { id: 5, name: 'Piano Lessons', category: 'Music', instructor: 'Emily Davis', initials: 'ED', location: 'Chicago, IL', rating: 4.9, reviews: 28 },
-  { id: 6, name: 'French Cooking', category: 'Cooking', instructor: 'Pierre Laurent', initials: 'PL', location: 'New York, NY', rating: 4.8, reviews: 22 },
-  { id: 7, name: 'Digital Marketing', category: 'Business', instructor: 'Lisa Thompson', initials: 'LT', location: 'Los Angeles, CA', rating: 4.5, reviews: 19 },
-  { id: 8, name: 'Watercolor Painting', category: 'Arts', instructor: 'Anna Kim', initials: 'AK', location: 'Seattle, WA', rating: 4.7, reviews: 14 },
-  { id: 9, name: 'Yoga for Beginners', category: 'Sports', instructor: 'David Miller', initials: 'DM', location: 'Miami, FL', rating: 4.8, reviews: 36 },
+const DUMMY_SKILLS = [
+  { id: 1, name: 'Python Programming', category: 'Technology', instructor: 'Sarah Wilson', initials: 'SW', location: 'New York, NY', rating: 4.9, reviews: 24, userId: null },
+  { id: 2, name: 'Guitar Basics', category: 'Music', instructor: 'Mike Chen', initials: 'MC', location: 'Los Angeles, CA', rating: 4.7, reviews: 18, userId: null },
 ];
 
 function LearnSkills() {
-  const [skills, setSkills] = useState(ALL_SKILLS);
-  const [allSkills, setAllSkills] = useState(ALL_SKILLS);
+  // ✅ FIXED: useState use garyo taki re-render ma pani correct value aos
+  const [currentUser] = useState(() => JSON.parse(localStorage.getItem('user')) || {});
+
+  const [skills, setSkills] = useState(DUMMY_SKILLS);
+  const [allSkills, setAllSkills] = useState(DUMMY_SKILLS);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showFilters, setShowFilters] = useState(false);
+  const [requestedIds, setRequestedIds] = useState([]);
 
   const categories = ['All', 'Technology', 'Languages', 'Music', 'Arts', 'Sports', 'Cooking', 'Business'];
 
@@ -30,6 +27,7 @@ function LearnSkills() {
             id: s.id,
             name: s.name,
             category: s.category,
+            userId: s.userId,
             instructor: s.User ? `${s.User.firstName} ${s.User.lastName}` : 'Unknown',
             initials: s.User ? `${s.User.firstName[0]}${s.User.lastName[0]}` : 'U',
             location: s.User?.location || 'N/A',
@@ -54,6 +52,33 @@ function LearnSkills() {
     setSkills(filtered);
   }, [searchQuery, selectedCategory, allSkills]);
 
+  const handleRequest = async (skill) => {
+    if (!skill.userId) {
+      alert('Cannot send request for this skill!');
+      return;
+    }
+    if (skill.userId === currentUser.id) {
+      alert('You cannot request your own skill!');
+      return;
+    }
+    if (requestedIds.includes(skill.id)) {
+      alert('You already sent a request for this skill!');
+      return;
+    }
+    try {
+      await API.post('/requests', {
+        skillId: skill.id,
+        fromUserId: currentUser.id,
+        toUserId: skill.userId,
+      });
+      setRequestedIds([...requestedIds, skill.id]);
+      alert(`Request sent for "${skill.name}"!`);
+    } catch (err) {
+      alert('Failed to send request!');
+      console.error(err);
+    }
+  };
+
   return (
     <>
       <h1 className="page-title">Learn Skills</h1>
@@ -76,30 +101,17 @@ function LearnSkills() {
           <h4 className="text-sm mb-4" style={{ fontWeight: 500 }}>Category</h4>
           <div className="filter-chips">
             {categories.map((cat) => (
-              <button
-                key={cat}
-                className={`filter-chip ${selectedCategory === cat ? 'active' : ''}`}
-                onClick={() => setSelectedCategory(cat)}
-              >
+              <button key={cat} className={`filter-chip ${selectedCategory === cat ? 'active' : ''}`} onClick={() => setSelectedCategory(cat)}>
                 {cat}
               </button>
             ))}
           </div>
-          <h4 className="text-sm mt-4 mb-4" style={{ fontWeight: 500 }}>Location</h4>
-          <select className="form-input" style={{ maxWidth: 300 }}>
-            <option>All Locations</option>
-            <option>New York, NY</option>
-            <option>Los Angeles, CA</option>
-            <option>Chicago, IL</option>
-            <option>Miami, FL</option>
-            <option>Seattle, WA</option>
-          </select>
         </div>
       )}
 
       <p className="text-sm text-muted mt-4">Showing {skills.length} skills</p>
 
-      <div className="skills-grid mt-4" id="learnSkillsGrid">
+      <div className="skills-grid mt-4">
         {skills.map((skill) => (
           <div className="skill-card" key={skill.id}>
             <div className="skill-card-header"></div>
@@ -120,7 +132,14 @@ function LearnSkills() {
                   <span className="skill-rating-value">{skill.rating}</span>
                   <span className="skill-rating-count">({skill.reviews})</span>
                 </div>
-                <button className="btn btn-link">Request</button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => handleRequest(skill)}
+                  disabled={requestedIds.includes(skill.id) || skill.userId === currentUser.id}
+                  style={{ fontSize: '12px', padding: '6px 14px' }}
+                >
+                  {requestedIds.includes(skill.id) ? '✓ Requested' : 'Request'}
+                </button>
               </div>
             </div>
           </div>

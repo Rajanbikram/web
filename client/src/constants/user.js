@@ -1,9 +1,12 @@
 const getUser = () => {
   try {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : { id: 1, firstName: 'John', lastName: 'Doe' };
+    const stored = localStorage.getItem('user');
+    if (!stored) return null;
+    const raw = JSON.parse(stored);
+    if (!raw) return null;
+    return raw;
   } catch {
-    return { id: 1, firstName: 'John', lastName: 'Doe' };
+    return null;
   }
 };
 

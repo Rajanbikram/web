@@ -1,18 +1,14 @@
 import express from 'express';
 import {
-  getAllSkills,
-  getUserSkills,
-  addSkill,
-  updateSkill,
-  deleteSkill,
-} from '../../Controller/User/skillController.js';
+  getRequests,
+  createRequest,
+  updateRequestStatus,
+} from '../../Controller/User/skillRequestController.js';
 
 const router = express.Router();
 
-router.get('/', getAllSkills);
-router.get('/user/:userId', getUserSkills);
-router.post('/', addSkill);
-router.put('/:id', updateSkill);
-router.delete('/:id', deleteSkill);
+router.get('/user/:userId', getRequests);
+router.post('/', createRequest);
+router.put('/:id', updateRequestStatus);
 
 export default router;

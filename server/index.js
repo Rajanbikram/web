@@ -10,6 +10,7 @@ import './Model/User/index.js';
 import './Model/Admin/UserModel.js';
 import './Model/Admin/SkillModel.js';
 import './Model/Admin/ReportModel.js';
+import './Model/Admin/UserModel.js'; 
 
 // Import database connection
 import { connection } from './database/db.js';

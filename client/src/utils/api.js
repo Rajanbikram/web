@@ -1,29 +1,33 @@
-import axios from "axios";
+import axios from 'axios';
 
-const BASE_URL = "http://localhost:5000/api";
+const API = axios.create({
+  baseURL: 'http://localhost:5000/api',
+  headers: { 'Content-Type': 'application/json' },
+});
+
+// Auto-attach token
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export default API;
 
 export const apiRequest = async (method, endpoint, data = null, options = {}) => {
   const { params, headers } = options;
-  const token = localStorage.getItem("access_token");
-
   try {
-    const response = await axios({
+    const response = await API({
       method,
-      url: `${BASE_URL}${endpoint}`,
-      data, // ✅ Now data is a direct parameter
+      url: endpoint,
+      data,
       params,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...headers,
-      },
+      headers,
     });
     return response.data;
   } catch (error) {
-    if (error.response && error.response.data) {
-      throw new Error(error.response.data.message || "Something went wrong!");
-    } else {
-      throw new Error("Server not reachable!");
-    }
+    throw new Error(error.response?.data?.message || 'Something went wrong!');
   }
 };

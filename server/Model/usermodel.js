@@ -10,7 +10,11 @@ export const User = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    name: {
+    firstName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    lastName: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -25,7 +29,7 @@ export const User = sequelize.define(
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM('user', 'admin'),
+      type: DataTypes.STRING,
       allowNull: false,
       defaultValue: 'user',
     },
@@ -33,13 +37,26 @@ export const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    address: {
+    location: {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    bio: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    mode: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    averageRating: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      defaultValue: 0,
+    },
   },
   {
-    tableName: "users",
+    tableName: "Users",
     freezeTableName: true,
     timestamps: true,
     hooks: {
@@ -62,3 +79,5 @@ export const User = sequelize.define(
 User.prototype.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
+
+export default User;

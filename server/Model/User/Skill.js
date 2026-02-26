@@ -9,7 +9,14 @@ const Skill = sequelize.define('Skill', {
   experience: { type: DataTypes.STRING },
   rating: { type: DataTypes.FLOAT, defaultValue: 0 },
   reviewCount: { type: DataTypes.INTEGER, defaultValue: 0 },
-  userId: { type: DataTypes.INTEGER, allowNull: false },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'Users',
+      key: 'id',
+    },
+  },
 });
 
 export default Skill;

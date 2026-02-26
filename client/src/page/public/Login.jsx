@@ -1,25 +1,37 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema } from './schema/authSchema';
-import { useApi } from '../../hooks/useApi';
+import { useState } from 'react';
+import { useApi } from '../../hooks/useAPi';
 import '../../css/auth.css';
 
 const Login = () => {
   const navigate = useNavigate();
   const { callApi, loading } = useApi();
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [errors, setErrors] = useState({});
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm({
-    resolver: zodResolver(loginSchema),
-  });
+  const validate = () => {
+    const errs = {};
+    if (!form.email.trim()) errs.email = 'Email is required';
+    if (!form.password) errs.password = 'Password is required';
+    return errs;
+  };
 
-  const onLogin = async (data) => {
+  const onLogin = async (e) => {
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
+    setErrors({});
+
     try {
-      const response = await callApi('POST', '/auth/login', data);
+      const response = await callApi('POST', '/auth/login', form);
+
       if (response.success) {
+        // Save token and full user data (with firstName/lastName)
         localStorage.setItem('access_token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data));
-        reset();
 
         // Role based redirect
         if (response.data.role === 'admin') {
@@ -39,15 +51,29 @@ const Login = () => {
         <h1 className="auth-title">Login</h1>
         <div className="auth-title-underline"></div>
 
-        <form onSubmit={handleSubmit(onLogin)}>
+        <form onSubmit={onLogin}>
           <div className="auth-input-group">
-            <input {...register('email')} type="email" placeholder="Enter your email" className="auth-input" disabled={loading} />
-            {errors.email && <span className="error-msg">{errors.email.message}</span>}
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="auth-input"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              disabled={loading}
+            />
+            {errors.email && <span className="error-msg">{errors.email}</span>}
           </div>
 
           <div className="auth-input-group">
-            <input {...register('password')} type="password" placeholder="Enter your password" className="auth-input" disabled={loading} />
-            {errors.password && <span className="error-msg">{errors.password.message}</span>}
+            <input
+              type="password"
+              placeholder="Enter your password"
+              className="auth-input"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              disabled={loading}
+            />
+            {errors.password && <span className="error-msg">{errors.password}</span>}
           </div>
 
           <div className="auth-row">

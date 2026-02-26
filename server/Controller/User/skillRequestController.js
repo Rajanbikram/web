@@ -16,6 +16,7 @@ export const getRequests = async (req, res) => {
     });
     res.json(requests);
   } catch (err) {
+    console.error('❌ getRequests Error:', err.message);
     res.status(500).json({ message: err.message });
   }
 };
@@ -24,9 +25,11 @@ export const getRequests = async (req, res) => {
 export const createRequest = async (req, res) => {
   try {
     const { skillId, fromUserId, toUserId } = req.body;
+    console.log('Creating request:', { skillId, fromUserId, toUserId });
     const request = await SkillRequest.create({ skillId, fromUserId, toUserId });
     res.status(201).json(request);
   } catch (err) {
+    console.error('❌ createRequest Error:', err.message);
     res.status(500).json({ message: err.message });
   }
 };
@@ -40,6 +43,7 @@ export const updateRequestStatus = async (req, res) => {
     await request.update({ status });
     res.json(request);
   } catch (err) {
+    console.error('❌ updateRequestStatus Error:', err.message);
     res.status(500).json({ message: err.message });
   }
 };

@@ -1,39 +1,56 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { signupSchema } from "./schema/authSchema";
-import { useApi } from "../../hooks/useApi";
-import "../../css/auth.css";
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useApi } from '../../hooks/useAPi';
+import '../../css/auth.css';
 
 const Register = () => {
-  const [selectedRole, setSelectedRole] = useState("user");
-  const navigate = useNavigate();
-
-  const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm({
-    resolver: zodResolver(signupSchema),
-    defaultValues: { role: "user" },
+  const [selectedRole, setSelectedRole] = useState('user');
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
   });
-
+  const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
   const { callApi, loading } = useApi();
 
-  const handleRoleSelect = (role) => {
-    setSelectedRole(role);
-    setValue("role", role);
+  const validate = () => {
+    const errs = {};
+    if (!form.firstName.trim()) errs.firstName = 'First name is required';
+    if (!form.lastName.trim()) errs.lastName = 'Last name is required';
+    if (!form.email.trim()) errs.email = 'Email is required';
+    if (!form.password) errs.password = 'Password is required';
+    if (form.password.length < 6) errs.password = 'Password must be at least 6 characters';
+    if (form.password !== form.confirmPassword) errs.confirmPassword = 'Passwords do not match';
+    return errs;
   };
 
-  const handleRegister = async (userData) => {
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
+    setErrors({});
+
     try {
-      const res = await callApi("POST", "/auth/register", { ...userData, role: selectedRole });
+      const res = await callApi('POST', '/auth/register', {
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        password: form.password,
+        role: selectedRole,
+      });
+
       if (res.success) {
-        // Save token and user
         localStorage.setItem('access_token', res.data.token);
         localStorage.setItem('user', JSON.stringify(res.data));
-        reset();
 
-        alert("Registration successful!");
+        alert('Registration successful!');
 
-        // Role based redirect
         if (selectedRole === 'admin') {
           navigate('/admin');
         } else {
@@ -41,7 +58,7 @@ const Register = () => {
         }
       }
     } catch (err) {
-      alert(err.message || "Registration failed!");
+      alert(err.message || 'Registration failed!');
     }
   };
 
@@ -51,43 +68,88 @@ const Register = () => {
         <h1 className="auth-title">Registration</h1>
         <div className="auth-title-underline"></div>
 
-        {/* Role Selection Boxes */}
+        {/* Role Selection */}
         <div className="role-selection">
           <div
             className={`role-box ${selectedRole === 'user' ? 'role-box-active' : ''}`}
-            onClick={() => handleRoleSelect('user')}
+            onClick={() => setSelectedRole('user')}
           >
             <div className="role-box-icon">👤</div>
             <div className="role-box-label">User</div>
           </div>
           <div
             className={`role-box ${selectedRole === 'admin' ? 'role-box-active' : ''}`}
-            onClick={() => handleRoleSelect('admin')}
+            onClick={() => setSelectedRole('admin')}
           >
             <div className="role-box-icon">🛡️</div>
             <div className="role-box-label">Admin</div>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(handleRegister)}>
+        <form onSubmit={handleRegister} autoComplete="off">
           <div className="auth-input-group">
-            <input {...register("name")} type="text" placeholder="Enter your name" className="auth-input" disabled={loading} />
-            {errors.name && <span className="error-msg">{errors.name.message}</span>}
+            <input
+              type="text"
+              placeholder="Enter your first name"
+              className="auth-input"
+              value={form.firstName}
+              onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+              disabled={loading}
+              autoComplete="off"
+            />
+            {errors.firstName && <span className="error-msg">{errors.firstName}</span>}
           </div>
 
           <div className="auth-input-group">
-            <input {...register("email")} type="email" placeholder="Enter your email" className="auth-input" disabled={loading} />
-            {errors.email && <span className="error-msg">{errors.email.message}</span>}
+            <input
+              type="text"
+              placeholder="Enter your last name"
+              className="auth-input"
+              value={form.lastName}
+              onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+              disabled={loading}
+              autoComplete="off"
+            />
+            {errors.lastName && <span className="error-msg">{errors.lastName}</span>}
           </div>
 
           <div className="auth-input-group">
-            <input {...register("password")} type="password" placeholder="Create a password" className="auth-input" disabled={loading} />
-            {errors.password && <span className="error-msg">{errors.password.message}</span>}
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="auth-input"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              disabled={loading}
+              autoComplete="off"
+            />
+            {errors.email && <span className="error-msg">{errors.email}</span>}
           </div>
 
           <div className="auth-input-group">
-            <input {...register("confirmPassword")} type="password" placeholder="Confirm a password" className="auth-input" disabled={loading} />
-            {errors.confirmPassword && <span className="error-msg">{errors.confirmPassword.message}</span>}
+            <input
+              type="password"
+              placeholder="Create a password"
+              className="auth-input"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              disabled={loading}
+              autoComplete="new-password"
+            />
+            {errors.password && <span className="error-msg">{errors.password}</span>}
+          </div>
+
+          <div className="auth-input-group">
+            <input
+              type="password"
+              placeholder="Confirm your password"
+              className="auth-input"
+              value={form.confirmPassword}
+              onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+              disabled={loading}
+              autoComplete="new-password"
+            />
+            {errors.confirmPassword && <span className="error-msg">{errors.confirmPassword}</span>}
           </div>
 
           <div className="auth-checkbox-row">
@@ -96,7 +158,7 @@ const Register = () => {
           </div>
 
           <button type="submit" className="auth-btn" disabled={loading}>
-            {loading ? "Registering..." : "Register Now"}
+            {loading ? 'Registering...' : 'Register Now'}
           </button>
 
           <p className="auth-footer">
