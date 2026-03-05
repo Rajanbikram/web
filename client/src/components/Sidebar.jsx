@@ -1,9 +1,15 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { navItems } from '../constants/navItems';
 
+const HIDDEN_PAGES = ['messages', 'reviews'];
+
 function Sidebar({ sidebarCollapsed, setSidebarCollapsed }) {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const filteredNavItems = navItems.filter(
+    (item) => !HIDDEN_PAGES.includes(item.page.toLowerCase())
+  );
 
   return (
     <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`} id="sidebar">
@@ -15,9 +21,8 @@ function Sidebar({ sidebarCollapsed, setSidebarCollapsed }) {
           </svg>
         </button>
       </div>
-
       <nav className="sidebar-nav">
-        {navItems.map((item) => (
+        {filteredNavItems.map((item) => (
           <button
             key={item.page}
             className={`nav-item ${location.pathname === `/${item.page}` ? 'active' : ''}`}
@@ -28,7 +33,6 @@ function Sidebar({ sidebarCollapsed, setSidebarCollapsed }) {
           </button>
         ))}
       </nav>
-
       <div className="sidebar-footer">© 2024 SkillSwap</div>
     </aside>
   );
