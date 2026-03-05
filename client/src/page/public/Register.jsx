@@ -46,16 +46,9 @@ const Register = () => {
       });
 
       if (res.success) {
-        localStorage.setItem('access_token', res.data.token);
-        localStorage.setItem('user', JSON.stringify(res.data));
-
-        alert('Registration successful!');
-
-        if (selectedRole === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/dashboard');
-        }
+        // ✅ DO NOT save token here — user must login first
+        alert('Registration successful! Please login to continue.');
+        navigate('/login');
       }
     } catch (err) {
       alert(err.message || 'Registration failed!');

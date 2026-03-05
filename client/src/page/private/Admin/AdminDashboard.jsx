@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import API from '../../../utils/api'; // ✅ FIXED: token interceptor wala
+import { useNavigate } from 'react-router-dom';
+import API from '../../../utils/api';
 import '../../../css/admin.css';
 
 import AdminSidebar from './AdminSidebar';
@@ -12,6 +13,7 @@ import AdminConfirmModal from './AdminConfirmModal';
 import AdminToast from './AdminToast';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [activePage, setActivePage] = useState('dashboard');
   const [pageTitle, setPageTitle] = useState('Dashboard Overview');
 
@@ -26,13 +28,20 @@ const AdminDashboard = () => {
   const showToast = (msg) => setToast({ show: true, message: msg });
   const hideToast = () => setToast({ show: false, message: '' });
 
+  // ✅ Real logout — clears storage and goes to landing page
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
+    navigate('/');
+  };
+
   const fetchAll = useCallback(async () => {
     try {
       const [statsRes, usersRes, skillsRes, reportsRes] = await Promise.all([
-        API.get('/admin/stats'),       // ✅ FIXED
-        API.get('/admin/users'),       // ✅ FIXED
-        API.get('/admin/skills'),      // ✅ FIXED
-        API.get('/admin/reports'),     // ✅ FIXED
+        API.get('/admin/stats'),
+        API.get('/admin/users'),
+        API.get('/admin/skills'),
+        API.get('/admin/reports'),
       ]);
       setStats(statsRes.data);
       setUsers(usersRes.data);
@@ -63,7 +72,7 @@ const AdminDashboard = () => {
       variant: action === 'block' ? 'danger' : 'confirm',
       onConfirm: async () => {
         try {
-          const res = await API.patch(`/admin/users/${userId}/block`); // ✅ FIXED
+          const res = await API.patch(`/admin/users/${userId}/block`);
           setUsers(prev => prev.map(u => u.id === userId ? res.data.user : u));
           showToast(`${user.name} has been ${res.data.user.status}`);
           fetchAll();
@@ -84,7 +93,7 @@ const AdminDashboard = () => {
       variant: 'danger',
       onConfirm: async () => {
         try {
-          await API.delete(`/admin/skills/${skillId}`); // ✅ FIXED
+          await API.delete(`/admin/skills/${skillId}`);
           setSkills(prev => prev.filter(s => s.id !== skillId));
           showToast(`"${skill.title}" has been removed`);
           fetchAll();
@@ -97,7 +106,7 @@ const AdminDashboard = () => {
 
   const handleResolveReport = async (reportId, status) => {
     try {
-      const res = await API.patch(`/admin/reports/${reportId}`, { status }); // ✅ FIXED
+      const res = await API.patch(`/admin/reports/${reportId}`, { status });
       setReports(prev => prev.map(r => r.id === reportId ? res.data.report : r));
       showToast(`Report ${status === 'resolved' ? 'approved' : 'dismissed'}`);
       fetchAll();
@@ -107,7 +116,6 @@ const AdminDashboard = () => {
   };
 
   const closeModal = () => setModal(prev => ({ ...prev, open: false, onConfirm: null }));
-
   const confirmModal = () => {
     if (modal.onConfirm) modal.onConfirm();
     closeModal();
@@ -118,7 +126,7 @@ const AdminDashboard = () => {
   return (
     <>
       <AdminSidebar activePage={activePage} onSwitch={handleSwitch} />
-      <AdminHeader pageTitle={pageTitle} onLogout={() => showToast('Logged out')} />
+      <AdminHeader pageTitle={pageTitle} onLogout={handleLogout} />
 
       <div className="main">
 
@@ -231,21 +239,6 @@ const AdminDashboard = () => {
         {/* REPORTED SKILLS PAGE */}
         <div className={`page ${activePage === 'reports' ? 'active' : ''}`}>
           <AdminReportsTable reports={reports} onResolve={handleResolveReport} />
-        </div>
-
-        {/* CONTENT MODERATION PAGE */}
-        <div className={`page ${activePage === 'moderation' ? 'active' : ''}`}>
-          <div className="card">
-            <div className="empty-state">
-              <div className="empty-icon">
-                <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-              </div>
-              <h2>Content Moderation</h2>
-              <p>All flagged content is reviewed through the Reported Skills section. No items currently require moderation.</p>
-            </div>
-          </div>
         </div>
 
         {/* ACTIVITY REPORTS PAGE */}
